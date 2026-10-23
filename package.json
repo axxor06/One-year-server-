@@ -1,0 +1,23 @@
+{
+  "name": "server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test",
+    "test:email": "node scripts/check-email.js",
+    "test:email:sample": "node scripts/check-email.js --letter",
+    "test:gmail": "node scripts/check-gmail.js",
+    "gmail:authorize": "node scripts/gmail-authorize.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "nodemailer": "^10.2.0"
+  }
+}
