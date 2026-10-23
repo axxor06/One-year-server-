@@ -2,12 +2,12 @@ import { Router } from "express";
 import crypto from "node:crypto";
 import { buildGuestbookEmail, buildLoveLetter } from "../services/email.js";
 import { sendEmail, isSet } from "../services/mailer.js";
-import { sendViaGmail } from "../services/gmail.js";
+import { sendViaBrevo } from "../services/mailer.js";
 const router = Router();
 
 // One Send click triggers TWO separate emails, started together and handled independently:
 //   message -> GUESTBOOK_TO_EMAIL (me), through Resend            (Dhwani's exact words)
-//   letter  -> HER_EMAIL (her), through the Gmail API (OAuth 2.0)   (pre-written, never contains her message)
+//   letter  -> HER_EMAIL (her), through Brevo transactional email (pre-written, never contains her message)
 // Each one ends as: "accepted" (the provider accepted it, which is not proof of inbox delivery), "failed",
 // "not_configured" (an env variable is missing), or "skipped" (the browser says it already succeeded earlier).
 // Nothing is stored. There is deliberately no GET, so messages can never be read back through the site.
@@ -22,9 +22,9 @@ async function deliverMessage(m) {
   return r.ok ? "accepted" : "failed";
 }
 async function deliverLetter() {
-  const gone = missing(["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REFRESH_TOKEN", "GMAIL_USER", "HER_EMAIL"]);
+  const gone = missing(["BREVO_API_KEY", "BREVO_FROM_EMAIL", "HER_EMAIL"]);
   if (gone.length) { console.error(`Letter not sent: missing ${gone.join(", ")}`); return "not_configured"; }
-  const r = await sendViaGmail({ to: process.env.HER_EMAIL, ...buildLoveLetter() });
+  const r = await sendViaBrevo({ to: process.env.HER_EMAIL, ...buildLoveLetter() });
   return r.ok ? "accepted" : "failed";
 }
 

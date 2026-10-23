@@ -15,3 +15,38 @@ export async function sendEmail({ label, to, subject, html, text }) {
 
 // A value counts as "not configured" if it is empty or still the placeholder from .env.example.
 export const isSet = (v, ...placeholders) => Boolean(v) && !String(v).startsWith("your_") && !placeholders.includes(String(v).trim());
+
+
+/**
+ * Send Dhwani's pre-written love letter through Brevo's transactional email API.
+ * Uses only server-side environment variables; never logs message content or secrets.
+ */
+export async function sendViaBrevo({ to, subject, html, text }) {
+  const { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME = "Arjun" } = process.env;
+  try {
+    const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": BREVO_API_KEY,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: BREVO_FROM_NAME, email: BREVO_FROM_EMAIL },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        textContent: text,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!r.ok) {
+      console.error(`Brevo refused the love-letter email (HTTP ${r.status})`);
+      return { ok: false, reason: "refused" };
+    }
+    return { ok: true }; // accepted by Brevo; not proof it reached the inbox
+  } catch (e) {
+    console.error(`Brevo unreachable for the love-letter email (${e.name})`);
+    return { ok: false, reason: "unreachable" };
+  }
+}
